@@ -1,0 +1,6 @@
+before_script:
+  - date
+
+build:
+  script:
+    - date +%s
