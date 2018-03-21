@@ -2,28 +2,22 @@ package gitlab
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"reflect"
 	"testing"
 )
 
-// content read a file, return its content as string
-func content(f string) string {
-	b, err := ioutil.ReadFile(f)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	c := string(b)
-	return c
-}
-
 // TODO: better test posting empty string
 func TestValidate(t *testing.T) {
-	validContent := content("testdata/validate_valid.yml")
-	invalidContent := content("testdata/validate_invalid.yml")
+	validContent := `
+	build1:
+		stage: build
+		script:
+			- echo "Do your build here"`
+
+	invalidContent := `
+	build1:
+		- echo "Do your build here"`
 
 	validRes := `{
 			"status": "valid",
@@ -33,7 +27,7 @@ func TestValidate(t *testing.T) {
 	invalidRes := `{
 			"status": "invalid",
 			"errors": [
-				"variables config should be a hash of key value pairs"
+				"error message when content is invalid"
 			]
 		}`
 
@@ -46,15 +40,12 @@ func TestValidate(t *testing.T) {
 
 	wantValid := &LintResult{
 		Status: "valid",
-		Errors: make([]string, 0),
+		Errors: []string{},
 	}
-
-	e := make([]string, 1)
-	e[0] = "variables config should be a hash of key value pairs"
 
 	wantInvalid := &LintResult{
 		Status: "invalid",
-		Errors: e,
+		Errors: []string{"error message when content is invalid"},
 	}
 
 	testCases := []struct {
