@@ -31,13 +31,6 @@ func TestValidate(t *testing.T) {
 			]
 		}`
 
-	testFunc := func(t *testing.T, got, want *LintResult) {
-		t.Helper()
-		if !reflect.DeepEqual(got, want) {
-			t.Errorf("Validate returned \ngot:\n%v\nwant:\n%v", Stringify(got), Stringify(want))
-		}
-	}
-
 	wantValid := &LintResult{
 		Status: "valid",
 		Errors: []string{},
@@ -75,7 +68,9 @@ func TestValidate(t *testing.T) {
 			}
 
 			want := tc.want
-			testFunc(t, got, want)
+			if !reflect.DeepEqual(got, want) {
+				t.Errorf("Validate returned \ngot:\n%v\nwant:\n%v", Stringify(got), Stringify(want))
+			}
 		})
 	}
 }
