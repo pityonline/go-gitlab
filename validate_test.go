@@ -9,7 +9,6 @@ import (
 	"testing"
 )
 
-// XXX: move this func out if necessary
 // content read a file, return its content as string
 func content(f string) string {
 	b, err := ioutil.ReadFile(f)
@@ -23,27 +22,20 @@ func content(f string) string {
 
 // TODO: better test posting empty string
 func TestValidate(t *testing.T) {
-	mux, server, client := setup()
-	defer teardown(server)
+	validContent := content("testdata/validate_valid.yml")
+	invalidContent := content("testdata/validate_invalid.yml")
 
-	var res string
-
-	valid := `{
+	validRes := `{
 			"status": "valid",
 			"errors": []
 		}`
 
-	invalid := `{
+	invalidRes := `{
 			"status": "invalid",
 			"errors": [
 				"variables config should be a hash of key value pairs"
 			]
 		}`
-
-	mux.HandleFunc("/ci/lint", func(w http.ResponseWriter, r *http.Request) {
-		testMethod(t, r, "POST")
-		fmt.Fprintf(w, res)
-	})
 
 	testFunc := func(t *testing.T, got, want *LintResult) {
 		t.Helper()
@@ -52,46 +44,47 @@ func TestValidate(t *testing.T) {
 		}
 	}
 
-	t.Run("valid yaml", func(t *testing.T) {
-		f := "testdata/validate_valid.yml"
-		c := content(f)
-		res = valid
+	wantValid := &LintResult{
+		Status: "valid",
+		Errors: make([]string, 0),
+	}
 
-		got, _, err := client.Validate.Lint(c)
+	e := make([]string, 1)
+	e[0] = "variables config should be a hash of key value pairs"
 
-		if err != nil {
-			t.Errorf("Validate returned error: %v", err)
-		}
+	wantInvalid := &LintResult{
+		Status: "invalid",
+		Errors: e,
+	}
 
-		e := make([]string, 0)
+	testCases := []struct {
+		desc     string
+		contents string
+		res      string
+		want     *LintResult
+	}{
+		{"valid case", validContent, validRes, wantValid},
+		{"invalid case", invalidContent, invalidRes, wantInvalid},
+	}
 
-		want := &LintResult{
-			Status: "valid",
-			Errors: e,
-		}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			mux, server, client := setup()
+			defer teardown(server)
 
-		testFunc(t, got, want)
-	})
+			mux.HandleFunc("/ci/lint", func(w http.ResponseWriter, r *http.Request) {
+				testMethod(t, r, "POST")
+				fmt.Fprintf(w, tc.res)
+			})
 
-	t.Run("invalid yaml", func(t *testing.T) {
-		f := "testdata/validate_invalid.yml"
-		c := content(f)
-		res = invalid
+			got, _, err := client.Validate.Lint(tc.contents)
 
-		got, _, err := client.Validate.Lint(c)
+			if err != nil {
+				t.Errorf("Validate returned error: %v", err)
+			}
 
-		if err != nil {
-			t.Errorf("Validate returned error: %v", err)
-		}
-
-		e := make([]string, 1)
-		e[0] = "variables config should be a hash of key value pairs"
-
-		want := &LintResult{
-			Status: "invalid",
-			Errors: e,
-		}
-
-		testFunc(t, got, want)
-	})
+			want := tc.want
+			testFunc(t, got, want)
+		})
+	}
 }
