@@ -9,6 +9,7 @@ go:
 stages:
   - lint
   - test
+  - release
 
 jobs:
   include:
@@ -20,6 +21,15 @@ jobs:
     - stage: test
       script:
         - go test -v
+    - stage: release
+      script:
+        - echo "release to GitHub"
+      deploy:
+        provider: releases
+        api_key: $GITHUB_OAUTH_TOKEN
+        skip_cleanup: true
+        on:
+          tags: true
 
 matrix:
   allow_failures:
