@@ -34,10 +34,14 @@ import (
 	"github.com/google/go-querystring/query"
 )
 
+var gitdir = "./"
+var libraryVersion = LibVersion(gitdir)
+var userAgent = "go-gitlab/" + libraryVersion
+
 const (
-	libraryVersion = "0.2.0"
+	// libraryVersion = "0.2.0"
 	defaultBaseURL = "https://gitlab.com/api/v4/"
-	userAgent      = "go-gitlab/" + libraryVersion
+	// userAgent      = "go-gitlab/" + libraryVersion
 )
 
 // tokenType represents a token type within GitLab.

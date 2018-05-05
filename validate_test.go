@@ -52,6 +52,7 @@ func TestValidate(t *testing.T) {
 			defer teardown(server)
 
 			mux.HandleFunc("/ci/lint", func(w http.ResponseWriter, r *http.Request) {
+				fmt.Printf("r = %+v\n", r.UserAgent())
 				testMethod(t, r, "POST")
 				fmt.Fprintf(w, tc.response)
 			})
