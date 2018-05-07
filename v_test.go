@@ -43,8 +43,6 @@ func TestVersion(t *testing.T) {
 	}
 
 	t.Run("test when git tag not exists", func(t *testing.T) {
-		t.Helper()
-
 		gitCmdOrFatal(t, tempdir, "describe", "--long", "--all")
 		if err != nil {
 			t.Fatalf("Determining package version from git failed: %v", err)
@@ -58,7 +56,6 @@ func TestVersion(t *testing.T) {
 	})
 
 	t.Run("test when git tag exists", func(t *testing.T) {
-		t.Helper()
 		gitCmdOrFatal(t, tempdir, "tag", "-a", "v1", "-m", `"release v1"`)
 		got := LibVersion(tempdir)
 		want := "v1"
